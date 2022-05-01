@@ -35,15 +35,15 @@ class ContentModel(models.Model):
 
 class Book(ContentModel):
     name = models.CharField(max_length=64)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, related_name="books")
 
 
 class Article(ContentModel):
     name = models.CharField(max_length=64)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, related_name="articles")
 
 
 class BookComment(ContentModel):
     parent = models.ForeignKey(Book, on_delete=models.CASCADE)
-
-
-class ArticleComment(ContentModel):
-    parent = models.ForeignKey(Article, on_delete=models.CASCADE)
