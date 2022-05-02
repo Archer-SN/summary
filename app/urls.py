@@ -10,14 +10,15 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
 
     # List of articles and books
-    path("books", views.book_lists, name="books"),
-    path("articles", views.article_lists, name="articles"),
+    path("books", views.book_list, name="books"),
+    path("articles", views.article_list, name="articles"),
     # User's profile view
-    path("user", views.user_view, name="user"),
+    path("user/<str:username>", views.user_view, name="user"),
     # Views articles and books the user have created
     path("books/<str:username>/<slug:book_name>", views.book_view, name="book"),
     path("articles/<str:username>/<slug:article_name>",
          views.article_view, name="article"),
 
-    path("create", views.create, name="create")
+    path("create/book", views.create_book, name="create_book"),
+    path("create/article", views.create_article, name="create_article"),
 ]
