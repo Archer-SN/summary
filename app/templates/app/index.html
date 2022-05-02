@@ -1,0 +1,23 @@
+{% extends "app/layout.html" %}
+
+{% block body %}
+    <div class="mb-3" id="new-books">
+        <h1>New Books</h1>
+        {% for new_book in new_books %}
+            <h2>{{ new_book.title }}</h2>
+        {% empty %}
+            <h2>No new book yet.</h2>
+        {% endfor %}
+    </div>
+    <div class="mb-3" id="library">
+        <h1>My library</h1>
+    </div>
+    <div  id="new-articles">
+        <h1>New Articles</h1>
+        {% for new_article in new_articles %}
+            <h2>{{ new_article.title }}</h2>
+        {% empty %}
+            <h2>No new article yet.</h2>
+        {% endfor %}
+    </div>
+{% endblock %}

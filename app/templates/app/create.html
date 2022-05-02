@@ -1,0 +1,10 @@
+{% extends "app/layout.html" %}
+
+{% block body %}
+    <!--Submits to the current path with different method-->
+    <form action="" method="POST">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Create">
+    </form>
+{% endblock %}

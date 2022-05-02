@@ -1,0 +1,26 @@
+{% extends "app/layout.html" %}
+
+{% block body %}
+    <div>
+        {% if request.user.is_authenticated %}
+            {% if content_type == "book" %}
+                <a href="{% url 'create_book' %}">Create</a>
+            {% else %}
+                <a href="{% url 'create_article' %}">Create</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div>
+        {% for content in content_list %}
+            <div>
+                <img src="{{ content.thumbnail }}">
+                <h3>{{ content.category.first }}</h3>
+                <h2>{{ content.title }}</h2>
+                {% if content_type == "book" %}
+                    <h3>By {{ content.book_author }}</h3>
+                {% endif %}
+                <h3>Summarized by {{ content.author.username }}</h3>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
