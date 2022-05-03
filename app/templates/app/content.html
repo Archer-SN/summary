@@ -1,0 +1,17 @@
+{% extends "app/layout.html" %}
+
+{% block body %}
+    <div>
+        <h1>{{ content.title }}</h1>
+        {% if content.author.id == request.user.id %}
+            {% if content_type == "book" %}
+                <a href="{% url 'edit_book' content.id %}">Edit</a>
+            {% elif content_type == "article" %}
+                <a href="{% url 'edit_article' content.id %}">Edit</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div>
+        {{ content.html_content|safe }}
+    </div>
+{% endblock %}

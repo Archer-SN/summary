@@ -1,3 +1,6 @@
+from markdown2 import markdown
+from datetime import datetime
+from django import forms
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -19,6 +22,9 @@ class User(AbstractUser):
     finished_articles = models.ManyToManyField(
         "Article", related_name="user_finished")
 
+    def __str__(self):
+        return self.username
+
 
 class Category(models.Model):
     name = models.CharField(max_length=32)
@@ -32,9 +38,13 @@ class ContentModel(models.Model):
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     content = models.TextField()
     thumbnail = models.URLField(default='')
+    date_created = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
+
+    def html_content(self):
+        return markdown(self.content)
 
 
 class Book(ContentModel):
@@ -47,6 +57,9 @@ class Book(ContentModel):
     def all_categories():
         return Category.objects.filter(id__in=Book.objects.all().values("category")).distinct()
 
+    def __str__(self):
+        return f"{self.title} summarized by {self.author.username}"
+
 
 class Article(ContentModel):
     title = models.CharField(max_length=64)
@@ -55,6 +68,9 @@ class Article(ContentModel):
     def all_categories():
         return Category.objects.filter(id__in=Article.objects.all().values("category")).distinct()
 
+    def __str__(self):
+        return f"{self.title} wrote by {self.author.username}"
+
 
 class BookComment(ContentModel):
     parent = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -62,3 +78,16 @@ class BookComment(ContentModel):
 
 class ArticleComment(ContentModel):
     parent = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+
+class NewArticleForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        exclude = ["author", "date_created"]
+
+
+class NewBookForm(forms.ModelForm):
+
+    class Meta:
+        model = Book
+        exclude = ["author", "date_created"]

@@ -10,17 +10,29 @@
             {% endif %}
         {% endif %}
     </div>
-    <div>
+    <div class="flex">
         {% for content in content_list %}
-            <div>
-                <img src="{{ content.thumbnail }}">
-                <h3>{{ content.category.first }}</h3>
-                <h2>{{ content.title }}</h2>
-                {% if content_type == "book" %}
-                    <h3>By {{ content.book_author }}</h3>
-                {% endif %}
-                <h3>Summarized by {{ content.author.username }}</h3>
-            </div>
+            {% if content_type == "book" %}
+            <a href="{% url 'book' content.id %}">
+            {% else %}
+            <a href="{% url 'article' content.id %}">
+            {% endif %}
+                <div class="flex-shrink w-96 p-5 bg-slate-700 text-white">
+                    <img src="{{ content.thumbnail }}">
+                    <h3>{{ content.category.first }}</h3>
+                    <h2>{{ content.title }}</h2>
+                    {% if content_type == "book" %}
+                        <h3>By <a href="https://www.google.com/search?q={{content.book_author}}">{{ content.book_author }}</a></h3>
+                        <h3>Summarized by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
+                    {% else %}
+                        <h3>Created by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
+                    {% endif %}
+                    
+                    <hr>
+                    <p>{{ content.date_created }}</p>
+                    <button>Favorite</button>
+                </div>
+            </a>
         {% endfor %}
     </div>
 {% endblock %}

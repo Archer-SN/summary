@@ -32,8 +32,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'app',
-    'tailwind',
-    'theme',
     'django_browser_reload',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -129,17 +127,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = "app.User"
-
-
-TAILWIND_APP_NAME = 'theme'
-
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
-
-
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 
 LOGIN_URL = 'login/'

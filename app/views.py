@@ -1,3 +1,4 @@
+import json
 from django import forms
 from django.db import IntegrityError
 from django.shortcuts import render
@@ -6,34 +7,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
-from .models import User, Category, Book, Article, BookComment
+from .models import User, Category, Book, Article, BookComment, NewArticleForm, NewBookForm
 # Create your views here.
-
-
-class NewArticleForm(forms.Form):
-    content = forms.CharField(widget=forms.Textarea)
-    thumbnail = forms.URLField()
-    title = forms.CharField(max_length=64)
-
-    CATEGORY_CHOICES = ((article_category, article_category)
-                        for article_category in Category.objects.all())
-    categories = forms.ChoiceField(choices=CATEGORY_CHOICES)
-
-
-class NewBookForm(forms.Form):
-    book_author = forms.CharField(max_length=64)
-    content = forms.CharField(widget=forms.Textarea)
-    thumbnail = forms.URLField()
-    title = forms.CharField(max_length=64)
-
-    CATEGORY_CHOICES = ((book_category, book_category)
-                        for book_category in Category.objects.all())
-    categories = forms.ChoiceField(choices=CATEGORY_CHOICES)
 
 
 def index(request):
     return render(request, "app/index.html", {
-        "new_books": Book.objects.all()[:2],
+        "new_books": Book.objects.all().order_by("-id")[:2],
         "new_articles": Article.objects.all()[:3]})
 
 
@@ -112,57 +92,141 @@ def user_view(request, username):
     })
 
 
-def book_view(request, username, book_name):
-    pass
+def book_view(request, book_id):
+    if not Book.objects.filter(pk=book_id).exists():
+        return HttpResponseRedirect(reverse("error"))
+
+    return render(request, "app/content.html", {
+        "content_type": "book",
+        "content": Book.objects.get(pk=book_id)
+    })
 
 
-def article_view(request, username, article_name):
-    pass
+def article_view(request, article_id):
+    if not Article.objects.filter(pk=article_id).exists():
+        return HttpResponseRedirect(reverse("error"))
+
+    return render(request, "app/content.html", {
+        "content_type": "article",
+        "content": Article.objects.get(pk=article_id)
+    })
 
 
+@login_required
 def create_book(request):
     if request.method == "POST":
-        book_form = NewBookForm(request.POST)
-        if book_form.is_valid():
-            book_author = book_form.cleaned_data["book_author"]
-            content = book_form.cleaned_data["content"]
-            thumbnail = book_form.cleaned_data["thumbnail"]
-            title = book_form.cleaned_data["title"]
-            categories = book_form.cleaned_data["categories"]
-            new_book = Book.objects.create(author=request.user, book_author=book_author, content=content,
-                                           thumbnail=thumbnail, title=title)
-            new_book.category.set(
-                Category.objects.filter(name=categories))
+        # The author field is not provided in the form
+        book = Book(author=request.user)
+        book_form = NewBookForm(request.POST, instance=book)
 
+        if book_form.is_valid():
+            book_form.save()
             return HttpResponseRedirect(reverse("books"))
 
     else:
         book_form = NewBookForm()
 
-    return render(request, "app/create.html", {
-        "content_type": "book",
+    return render(request, "app/form.html", {
+        "value": "Create",
         "form": book_form,
     })
 
 
+@login_required
 def create_article(request):
     if request.method == "POST":
-        article_form = NewArticleForm(request.POST)
+        # The author field is not provided in the form
+        article = Article(author=request.user)
+        article_form = NewArticleForm(request.POST, instance=article)
+
         if article_form.is_valid():
-            content = article_form.cleaned_data["content"]
-            thumbnail = article_form.cleaned_data["thumbnail"]
-            title = article_form.cleaned_data["title"]
-            categories = article_form.cleaned_data["categories"]
-            new_article = Article.objects.create(author=request.user, content=content,
-                                                 thumbnail=thumbnail, title=title)
-            new_article.category.set(
-                Category.objects.filter(name=categories))
+            article_form.save()
 
             return HttpResponseRedirect(reverse("articles"))
     else:
         article_form = NewArticleForm()
 
-    return render(request, "app/create.html", {
-        "content_type": "article",
+    return render(request, "app/form.html", {
+        "value": "Create",
         "form": article_form,
     })
+
+
+@login_required
+def edit_book(request, book_id):
+    # Edit the book
+    if request.method == "POST":
+
+        if not Book.objects.filter(pk=book_id).exists():
+            return HttpResponseRedirect(reverse("error"))
+
+        book = Book.objects.get(pk=book_id)
+
+        if book.author.id != request.user.id:
+            return HttpResponse(status=401)
+
+        book_form = NewBookForm(request.POST, instance=book)
+        if book_form.is_valid():
+            book_form.save()
+            return HttpResponseRedirect(reverse("book", args=[book_id]))
+
+    elif request.method == "GET":
+        # Send a form with a populated data if the book exists
+        if Book.objects.filter(pk=book_id).exists():
+            book = Book.objects.get(pk=book_id)
+
+            if request.user.id != book.author.id:
+                return HttpResponse(status=401)
+
+            book_form = NewBookForm(instance=book)
+            return render(request, "app/form.html", {
+                "value": "Save",
+                "form": book_form,
+            })
+        else:
+            return HttpResponseRedirect(reverse("error"))
+
+    else:
+        return HttpResponse(status=405)
+
+
+@login_required
+def edit_article(request, article_id):
+    # Edit the article
+    if request.method == "POST":
+
+        if not Article.objects.filter(pk=article_id).exists():
+            return HttpResponseRedirect(reverse("error"))
+
+        article = Article.objects.get(pk=article_id)
+
+        if article.author.id != request.user.id:
+            return HttpResponse(status=401)
+
+        article_form = NewArticleForm(request.POST, instance=article)
+        if article_form.is_valid():
+            article_form.save()
+            return HttpResponseRedirect(reverse("article", args=[article_id]))
+
+    elif request.method == "GET":
+        # Send a form with a populated data if the book exists
+        if article.objects.filter(pk=article_id).exists():
+            article = Article.objects.get(pk=article_id)
+
+            if request.user.id != article.author.id:
+                return HttpResponse(status=401)
+
+            article_form = NewArticleForm(instance=article)
+            return render(request, "app/form.html", {
+                "value": "Save",
+                "form": article_form,
+            })
+        else:
+            return HttpResponseRedirect(reverse("error"))
+
+    else:
+        return HttpResponse(status=405)
+
+
+def error_view(request):
+    return render(request, "app/error.html")
