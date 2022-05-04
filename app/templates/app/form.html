@@ -1,10 +1,18 @@
 {% extends "app/layout.html" %}
 
 {% block body %}
-    <!--Submits to the current path with different method-->
-    <form action="" method="POST">
-        {% csrf_token %}
-        {{ form }}
-        <input type="submit" value="Create">
-    </form>
+<div class="d-flex align-items-center p-5">
+        <!--Submits to the current path with different method-->
+        <form action="" method="POST" class="flex-grow-1">
+            {% csrf_token %}
+            {% for field in form  %}
+                <div class="mb-3">
+                    <label for="{{ field.auto_id }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                </div>    
+            {% endfor %}
+            <input type="submit" value="Create" class="btn btn-primary">
+        </form>
+    </div>
+
 {% endblock %}

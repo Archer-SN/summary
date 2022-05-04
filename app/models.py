@@ -28,6 +28,8 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField(max_length=32)
+    # Font awesome's icon name
+    icon = models.SlugField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -85,9 +87,19 @@ class NewArticleForm(forms.ModelForm):
         model = Article
         exclude = ["author", "date_created"]
 
+    def __init__(self, *args, **kwargs):
+        super(NewArticleForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+
 
 class NewBookForm(forms.ModelForm):
 
     class Meta:
         model = Book
         exclude = ["author", "date_created"]
+
+    def __init__(self, *args, **kwargs):
+        super(NewBookForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'

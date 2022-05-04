@@ -1,7 +1,7 @@
 {% extends "app/layout.html" %}
 
 {% block body %}
-    <div>
+    <div class="p-5">
         <h1>{{ content.title }}</h1>
         {% if content.author.id == request.user.id %}
             {% if content_type == "book" %}
@@ -11,7 +11,12 @@
             {% endif %}
         {% endif %}
     </div>
-    <div>
-        {{ content.html_content|safe }}
+    <div class="d-flex justify-content-evenly h-100 p-5 bg-light container-fluid">
+        <div>
+            <i class="fa-solid fa-lg fa-star mt-1"></i>
+        </div>
+        <div class="bg-white rounded p-4">
+            {{ content.html_content|safe }}
+        </div>
     </div>
 {% endblock %}

@@ -1,36 +1,60 @@
 {% extends "app/layout.html" %}
 
 {% block body %}
-    <div>
+    <div class="d-flex justify-content-center align-items-center gap-4 p-4 border border-1 mb-5">
+        {% if content_type == "book" %}
+            <h1 class="h2">Browse Books</h1>
+        {% else %} 
+            <h1 class="h2">Browse Articles</h1>
+        {% endif %}
+        <div>
+            <input type="text" class="form-control-lg" placeholder="Search {% if content_type == 'book' %}Books{% else %}Articles{% endif %}">
+        </div>
+        <div>
+            <select class="form-select-lg">
+                <option value="-date_created">Latest</option>
+                <option value="date_created">Oldest</option>
+                <option value="-user_favorited">Most Popular</option>
+                <option value="title">Alphabetical</option>
+            </select>
+        </div>
+        <div>
+            <select class="form-select-lg">
+                {% for category in categories %}
+                    <option value="{{ category.name }}"><i class="fa-solid {{ category.icon }}"></i>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
         {% if request.user.is_authenticated %}
-            {% if content_type == "book" %}
-                <a href="{% url 'create_book' %}">Create</a>
-            {% else %}
-                <a href="{% url 'create_article' %}">Create</a>
-            {% endif %}
+            <a href="{% if content_type == 'book' %} {% url 'create_book' %} {% else %} {% url 'create_article' %} {% endif %}" class="btn btn-primary">Create</a>
         {% endif %}
     </div>
-    <div class="flex">
+    <div class="d-flex flex-wrap justify-content-center gap-4 pb-5">
         {% for content in content_list %}
             {% if content_type == "book" %}
             <a href="{% url 'book' content.id %}">
             {% else %}
             <a href="{% url 'article' content.id %}">
             {% endif %}
-                <div class="flex-shrink w-96 p-5 bg-slate-700 text-white">
-                    <img src="{{ content.thumbnail }}">
-                    <h3>{{ content.category.first }}</h3>
-                    <h2>{{ content.title }}</h2>
-                    {% if content_type == "book" %}
-                        <h3>By <a href="https://www.google.com/search?q={{content.book_author}}">{{ content.book_author }}</a></h3>
-                        <h3>Summarized by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
-                    {% else %}
-                        <h3>Created by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
-                    {% endif %}
-                    
-                    <hr>
-                    <p>{{ content.date_created }}</p>
-                    <button>Favorite</button>
+                <div class="content-container d-flex flex-column border border-1 rounded">
+                    <div class="p-5 bg-light">
+                        <img src="{{ content.thumbnail }}" class="img-fluid rounded">
+                    </div>
+                    <div class="flex-grow-1 p-4 border-top border-1">
+                        <h3 class="fs-5 text-secondary">{{ content.category.first }}</h3>
+                        <h2 class="fs-4 mb-2 text-dark">{{ content.title }}</h2>
+                        {% if content_type == "book" %}
+                            <a class="fs-5 fw-bold" href="https://www.google.com/search?q={{content.book_author}}">By {{ content.book_author }}</a>
+                            <h3 class="fs-5 text-dark">Summarized by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
+                        {% else %}
+                            <h3 class="fs-5 text-dark">Created by <a href="{% url 'user' content.author %}">{{ content.author }}</a></h3>
+                        {% endif %}
+                    </div>
+                    <div class="flex-shrink-1 pt-3 d-flex justify-content-evenly border border-1">
+                        <p class="d-inline">{{ content.date_created }}</p>
+                        <i class="fa-solid fa-star mt-1"></i>
+                        <i class="fa-solid fa-ellipsis-vertical mt-1"></i>
+                    </div>
                 </div>
             </a>
         {% endfor %}
