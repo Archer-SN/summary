@@ -1,0 +1,38 @@
+
+<div id="{{id}}" class="card {{ display }} flex-column border border-1 rounded"  data-content-type="{{content_type}}" data-content-id="{{ content.id|default:1 }}" data-content="{{ content }}">
+    <div class="url p-5 bg-light">
+        <img src="{{ content.thumbnail }}" class="thumbnail img-fluid rounded">
+    </div>
+    <div class="url flex-grow-1 p-4 border-top border-1">
+        <h3 class="category fs-5 text-secondary">{{ content.category.first }}</h3>
+        <h2 class="title fs-4 mb-2 text-dark">{{ content.title }}</h2>
+        {% if content_type == "book" %}
+            <a class="book-author fs-5 fw-bold" href="https://www.google.com/search?q={{content.book_author|default:''}}">By {{ content.book_author }}</a>
+            <h3 class="author fs-5 text-dark">Summarized by <a href="{% url 'user' content.author|default:'test' %}">{{ content.author }}</a></h3>
+        {% else %}
+            <h3 class="author fs-5 text-dark">Created by <a href="{% url 'user' content.author|default:'test' %}">{{ content.author }}</a></h3>
+        {% endif %}
+    </div>
+    <div data-content-type="{{content_type}}" data-content-id="{{ content.id|default:1 }}" class="bottom-box flex-shrink-1 pt-3 d-flex justify-content-evenly border border-1">
+        <p class="date-created d-inline">Created {{ content.formatted_time }}</p>
+        {% if content_type == "book" %}
+            <i class="favorite {% if content in request.user.favorite_books.all %}is-favorite{% else %}not-favorite{% endif %} fa-solid fa-star fa-lg pt-1 mt-2"></i>
+        {% else %}
+            <i class="favorite {% if content in request.user.favorite_articles.all %}is-favorite{% else %}not-favorite{% endif %} fa-solid fa-star fa-lg pt-1 mt-2"></i>
+        {% endif %}
+        {% if content_type == "book" and container %}
+            <i class="options dropdown-toggle fa-solid fa-ellipsis-vertical mt-1" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+            <ul class="mt-3 dropdown-menu dropdown-menu-lg-end user-select-none">
+                {% if container == "reading" %}
+                    <li class="dropdown-item finished-btn">Move to Finished</li>
+                    <li class="dropdown-item remove-btn">Remove from Home</li>
+                {%  elif container == "finished" %}
+                    <li class="dropdown-item reading-btn">Move to Currently Reading</li>
+                    <li class="dropdown-item remove-btn">Remove from Home</li>
+                {% else %}    
+                    <li class="dropdown-item reading-btn">Add to Currently Reading</li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    </div>
+</div>

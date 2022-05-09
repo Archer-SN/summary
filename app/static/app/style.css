@@ -6,7 +6,33 @@ a {
     text-decoration: none !important;
 }
 
-.content-container {
+i {
+    transition: color 1s ease-in-out;
+}
+
+#content {
+    width: 80rem;
+}
+
+.card {
+    z-index: 1;
     width: 350px;
     height: auto;
+}
+
+.url, .favorite {
+    cursor: pointer;
+}
+
+.is-favorite {
+    color: #FFC906;
+}
+
+.not-favorite {
+    color: black;
+}
+
+.show-btn {
+    border: none;
+    background: none;
 }

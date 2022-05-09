@@ -1,22 +1,35 @@
 {% extends "app/layout.html" %}
 
 {% block body %}
-    <div class="p-5">
-        <h1>{{ content.title }}</h1>
-        {% if content.author.id == request.user.id %}
-            {% if content_type == "book" %}
-                <a href="{% url 'edit_book' content.id %}">Edit</a>
-            {% elif content_type == "article" %}
-                <a href="{% url 'edit_article' content.id %}">Edit</a>
+    <div class="d-flex flex-column">
+        <div class="row row-cols-1 p-5 justify-content-md-center">
+            {% if content.author.id == request.user.id %}
+                {% if content_type == "book" %}
+                    <a href="{% url 'edit_book' content.id %}" class="col-1 ms-auto btn btn-primary btn-lg">Edit</a>
+                {% elif content_type == "article" %}
+                    <a href="{% url 'edit_article' content.id %}" class="col-1 ms-auto btn btn-primary btn-lg">Edit</a>
+                {% endif %}
             {% endif %}
-        {% endif %}
-    </div>
-    <div class="d-flex justify-content-evenly h-100 p-5 bg-light container-fluid">
-        <div>
-            <i class="fa-solid fa-lg fa-star mt-1"></i>
+            <h1 class="col text-center mb-4">{{ content.title }}</h1>
+            {% if content_type == "article" %}
+                <img src="{{ content.thumbnail }}" class="col-3 d-block rounded">
+            {% endif %}
         </div>
-        <div class="bg-white rounded p-4">
-            {{ content.html_content|safe }}
+        <div id="content-container" class="d-flex justify-content-center flex-wrap gap-5 py-5 bg-light container-fluid">
+            <div class="d-flex flex-column align-items-end justify-content-evenly pe-5">
+                <button id="favorite" class="btn">
+                    <i class="fa-solid fa-lg fa-star fa-2xl pt-3 text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Favorite"></i>
+                </button>
+                <button id="download" class="btn">
+                    <i class="fa-solid fa-download fa-2xl text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Download PDF"></i>
+                </button>
+                <button id="night" class="btn">
+                    <i class="fa-solid fa-moon fa-2xl text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Night Mode"></i>
+                </button>
+            </div>
+            <div id="content" class="bg-white border border-0 rounded p-5">
+                {{ content.html_content|safe }}
+            </div>
         </div>
     </div>
 {% endblock %}

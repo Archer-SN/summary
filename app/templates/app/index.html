@@ -1,23 +1,58 @@
 {% extends "app/layout.html" %}
 
 {% block body %}
-    <div class="mb-3" id="new-books">
-        <h1>New Books</h1>
-        {% for new_book in new_books %}
-            <h2>{{ new_book.title }}</h2>
-        {% empty %}
-            <h2>No new book yet.</h2>
-        {% endfor %}
+    <div class="d-flex flex-wrap justify-content-evenly px-5 py-4 border border-1">
+        <h1>Home</h1>
+        <input type="text" placeholder="Search my library" class="form-control-lg">
     </div>
-    <div class="mb-3" id="library">
-        <h1>My library</h1>
+    <div class="d-flex flex-column align-items-center mb-3 mt-4" id="new-books">
+        <h1 class="mb-5">New Books</h1>
+        <div class="d-flex flex-wrap justify-content-center gap-4 pb-5 px-2">
+            {% for content in new_books %}
+                {% include "app/card.html" with display="d-flex" content_type="book" %}
+            {% empty %}
+                <h2>No new book yet.</h2>
+            {% endfor %}
+        </div>
     </div>
-    <div  id="new-articles">
-        <h1>New Articles</h1>
-        {% for new_article in new_articles %}
-            <h2>{{ new_article.title }}</h2>
-        {% empty %}
-            <h2>No new article yet.</h2>
-        {% endfor %}
+    <div class="mb-3 d-flex flex-column align-items-center" id="library">
+        <h1 class="text-center">My library</h1>
+        <div class="border-bottom border-1">
+            <button id="show-reading-btn" class="show-btn bg-white p-2 border-bottom border-3 fw-bold"><i class="fa-solid fa-book"></i> Currently Reading</button>
+             <button id="show-finished-btn" class="show-btn bg-white p-2"><i class="fa-solid fa-circle-check"></i> Finished</button>   
+             <button id="show-favorite-btn" class="show-btn bg-white p-2"><i class="fa-solid fa-star"></i> Favorites</button>       
+        </div>
+        <div id="reading" class="book-container d-flex flex-wrap justify-content-center gap-4 pt-4 pb-5 px-5">
+            {% for content in reading_books %}
+                {% include "app/card.html" with display="d-flex" content_type="book" container="reading" %}
+            {% empty %}
+                <p>No currently reading book. You can find books <a href="{% url 'books' %}">here</a></p>
+            {% endfor %}
+        </div>
+        <div id="finished" class="book-container d-none flex-wrap justify-content-center gap-4 pt-4 pb-5 px-5">
+            {% for content in finished_books %}
+                {% include "app/card.html" with display="d-flex" content_type="book" container="finished" %}
+            {% empty %}
+                <p>No finished book. You can find books <a href="{% url 'books' %}">here</a></p>
+            {% endfor %}
+        </div>
+        <div id="favorites" class="book-container d-none flex-wrap justify-content-center gap-4 pt-4 pb-5 px-5">
+            {% for content in favorite_books %}
+                {% include "app/card.html" with display="d-flex" content_type="book" container="favorites" %}
+            {% empty %}
+                <p>No favorite book. You can find books <a href="{% url 'books' %}">here</a></p>
+            {% endfor %}
+        </div>
     </div>
+    <div id="new-articles" class="py-4">
+        <h1 class="text-center">New Articles</h1>
+        <div class="d-flex flex-wrap justify-content-center gap-4 py-4 px-5">
+            {% for content in new_articles %}
+                {% include "app/card.html" with display="d-flex" content_type="article" %}
+            {% empty %}
+                <h2>No new article yet.</h2>
+            {% endfor %}
+        </div>
+    </div>
+
 {% endblock %}

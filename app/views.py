@@ -1,20 +1,26 @@
 import json
+from unicodedata import category
 from django import forms
 from django.db import IntegrityError
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
+from jinja2 import Undefined
 
 from .models import User, Category, Book, Article, BookComment, NewArticleForm, NewBookForm
 # Create your views here.
 
 
 def index(request):
+
     return render(request, "app/index.html", {
-        "new_books": Book.objects.all().order_by("-id")[:2],
-        "new_articles": Article.objects.all()[:3]})
+        "new_books": Book.objects.defer("content").all().order_by("-id")[:2],
+        "new_articles": Article.objects.defer("content").all()[:3],
+        "favorite_books": Book.objects.defer("content").filter(pk__in=request.user.favorite_books.all()),
+        "reading_books": Book.objects.defer("content").filter(pk__in=request.user.reading_books.all()),
+        "finished_books": Book.objects.defer("content").filter(pk__in=request.user.finished_books.all())})
 
 
 def login_view(request):
@@ -71,17 +77,68 @@ def register_view(request):
 
 def book_list(request):
 
+    # Value to sort by
+    # Sort by latest by default
+    search_value = request.GET.get("search", None)
+    sort_value = request.GET.get("sort", None)
+    category_value = request.GET.get("category", "undefined")
+    if sort_value != None or search_value != None:
+        # Sort value can not be an empty string
+        if sort_value == None or sort_value == "":
+            sort_value = "-date_created"
+        if search_value == None:
+            search_value = ""
+
+        content_list = []
+        if not category_value or category_value == "undefined":
+            for book in Book.objects.all().filter(title__contains=search_value).order_by(sort_value):
+                content_list.append(book.json_data(
+                ) | {"favorite": request.user.favorite_books.filter(pk=book.id).exists()})
+        else:
+            for book in Book.objects.all().filter(title__contains=search_value).filter(category__id=Category.objects.get(name=category_value).id).order_by(sort_value):
+                content_list.append(book.json_data(
+                ) | {"favorite": request.user.favorite_books.filter(pk=book.id).exists()})
+
+        return JsonResponse({"content_type": "book",
+                             "content_list": content_list})
+
     return render(request, "app/list.html", {
         "content_type": "book",
-        "content_list": Book.objects.all(),
+        "content_list": Book.objects.defer("content").all().order_by("-date_created"),
         "categories": Book.all_categories()
     })
 
 
 def article_list(request):
+
+    # Value to sort by
+    # Sort by latest by default
+    search_value = request.GET.get("search", None)
+    sort_value = request.GET.get("sort", None)
+    category_value = request.GET.get("category", "undefined")
+    if sort_value != None or search_value != None:
+        # Sort value can not be an empty string
+        if sort_value == None or sort_value == "":
+            sort_value = "-date_created"
+        if search_value == None:
+            search_value = ""
+
+        content_list = []
+        if not category_value or category_value == "undefined":
+            for article in Article.objects.all().filter(title__contains=search_value).order_by(sort_value):
+                content_list.append(article.json_data(
+                ) | {"favorite": request.user.favorite_articles.filter(pk=article.id).exists()})
+        else:
+            for article in Article.objects.all().filter(title__contains=search_value).filter(category__id=Category.objects.get(name=category_value).id).order_by(sort_value):
+                content_list.append(article.json_data(
+                ) | {"favorite": request.user.favorite_articles.filter(pk=article.id).exists()})
+
+        return JsonResponse({"content_type": "article",
+                             "content_list": content_list})
+
     return render(request, "app/list.html", {
         "content_type": "article",
-        "content_list": Article.objects.all(),
+        "content_list": Article.objects.defer("content").all().order_by("-date_created"),
         "categories": Article.all_categories()
     })
 
@@ -93,23 +150,79 @@ def user_view(request, username):
 
 
 def book_view(request, book_id):
-    if not Book.objects.filter(pk=book_id).exists():
-        return HttpResponseRedirect(reverse("error"))
+    if request.method == "PUT":
+        data = json.loads(request.body)
+        action = data["action"]
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("login"))
+        book = Book.objects.get(pk=book_id)
 
-    return render(request, "app/content.html", {
-        "content_type": "book",
-        "content": Book.objects.get(pk=book_id)
-    })
+        if not book:
+            return HttpResponse(status=404)
+
+        if action == "favorite":
+            # If book is already favorited
+            if request.user.favorite_books.filter(pk=book_id).exists():
+                request.user.favorite_books.remove(book)
+                return JsonResponse({"className": "not-favorite"})
+            else:
+                request.user.favorite_books.add(book)
+                return JsonResponse({"className": "is-favorite"})
+        # Add to currently reading list
+        elif action == "reading":
+            if request.user.reading_books.filter(pk=book_id).exists():
+                return HttpResponse(status=304)
+
+            request.user.finished_books.remove(book)
+            request.user.reading_books.add(book)
+            return HttpResponse(status=201)
+        # Add to finished
+        elif action == "finished":
+            # The book can only be in one place either reading or finished
+            request.user.finished_books.add(book)
+            request.user.reading_books.remove(book)
+            return HttpResponse(status=201)
+        # Remove from list
+        elif action == "remove":
+            if data["from"] == "favorites":
+                request.user.favorite_books.remove(book)
+            else:
+                request.user.finished_books.remove(book)
+                request.user.reading_books.remove(book)
+            return HttpResponse(status=201)
+
+    else:
+        if not Book.objects.filter(pk=book_id).exists():
+            return HttpResponseRedirect(reverse("error"))
+
+        return render(request, "app/content.html", {
+            "content_type": "book",
+            "content": Book.objects.get(pk=book_id)
+        })
 
 
 def article_view(request, article_id):
-    if not Article.objects.filter(pk=article_id).exists():
-        return HttpResponseRedirect(reverse("error"))
+    if request.method == "PUT":
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("login"))
+        # If book is already favorited
+        if request.user.favorite_articles.filter(pk=article_id).exists():
+            request.user.favorite_articles.remove(
+                Article.objects.get(pk=article_id))
+            return JsonResponse({"className": "not-favorite"})
+        else:
+            request.user.favorite_articles.add(
+                Article.objects.get(pk=article_id))
+            return JsonResponse({"className": "is-favorite"})
 
-    return render(request, "app/content.html", {
-        "content_type": "article",
-        "content": Article.objects.get(pk=article_id)
-    })
+    else:
+        if not Article.objects.filter(pk=article_id).exists():
+            return HttpResponseRedirect(reverse("error"))
+
+        return render(request, "app/content.html", {
+            "content_type": "article",
+            "content": Article.objects.get(pk=article_id)
+        })
 
 
 @login_required
@@ -210,7 +323,7 @@ def edit_article(request, article_id):
 
     elif request.method == "GET":
         # Send a form with a populated data if the book exists
-        if article.objects.filter(pk=article_id).exists():
+        if Article.objects.filter(pk=article_id).exists():
             article = Article.objects.get(pk=article_id)
 
             if request.user.id != article.author.id:

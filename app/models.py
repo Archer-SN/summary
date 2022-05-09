@@ -1,26 +1,25 @@
+from unicodedata import category
+from django.dispatch import receiver
 from markdown2 import markdown
 from datetime import datetime
 from django import forms
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import post_save
 
 # Create your models here.
 
 
 class User(AbstractUser):
     favorite_books = models.ManyToManyField(
-        "Book", related_name="user_favorited")
+        "Book", related_name="user_favorited", blank=True)
     favorite_articles = models.ManyToManyField(
-        "Article", related_name="user_favorited")
+        "Article", related_name="user_favorited", blank=True)
     reading_books = models.ManyToManyField(
-        "Book", related_name="user_read")
-    reading_articles = models.ManyToManyField(
-        "Article", related_name="user_read")
+        "Book", related_name="user_read", blank=True)
     finished_books = models.ManyToManyField(
-        "Book", related_name="user_finished")
-    finished_articles = models.ManyToManyField(
-        "Article", related_name="user_finished")
+        "Book", related_name="user_finished", blank=True)
 
     def __str__(self):
         return self.username
@@ -45,6 +44,10 @@ class ContentModel(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def formatted_time(self):
+        return self.date_created.strftime("%d %B %Y")
+
     def html_content(self):
         return markdown(self.content)
 
@@ -57,7 +60,10 @@ class Book(ContentModel):
     category = models.ManyToManyField(Category)
 
     def all_categories():
-        return Category.objects.filter(id__in=Book.objects.all().values("category")).distinct()
+        return Category.objects.filter(id__in=Book.objects.all().values("category")).exclude(name="All").distinct()
+
+    def json_data(self):
+        return {"id": self.id, "author": self.author.username, "thumbnail": self.thumbnail, "date_created": self.formatted_time, "book_author": self.book_author, "title": self.title, "category": self.category.first().name}
 
     def __str__(self):
         return f"{self.title} summarized by {self.author.username}"
@@ -68,7 +74,10 @@ class Article(ContentModel):
     category = models.ManyToManyField(Category)
 
     def all_categories():
-        return Category.objects.filter(id__in=Article.objects.all().values("category")).distinct()
+        return Category.objects.filter(id__in=Article.objects.all().values("category")).exclude(name="All").distinct()
+
+    def json_data(self):
+        return {"id": self.id, "author": self.author.username, "thumbnail": self.thumbnail, "date_created": self.formatted_time, "title": self.title, "category": self.category.first().name}
 
     def __str__(self):
         return f"{self.title} wrote by {self.author.username}"
@@ -101,5 +110,6 @@ class NewBookForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(NewBookForm, self).__init__(*args, **kwargs)
+
         for visible in self.visible_fields():
             visible.field.widget.attrs['class'] = 'form-control'
