@@ -210,6 +210,10 @@ function handleFavorite() {
                     relatedStar.classList.add("is-favorite")
                 }
                 if (favoriteContainer != null && favoriteContainer.contains(relatedCards[0]) == false) {
+                    
+                    if (favoriteContainer.firstElementChild.tagName == "P") {
+                        favoriteContainer.replaceChildren();
+                    }
                     // If the card is favorited then it should have at least 1 card to copy
                     const cardClone = relatedCards[0].cloneNode(true);
                     const urlDivs = cardClone.getElementsByClassName("url");
@@ -250,6 +254,7 @@ function handleReading() {
     const card = dropdownParent.parentNode;
     const cardContainer = card.parentNode;
     const readingContainer= document.getElementById("reading");
+    const finishedContainer = document.getElementById("finished");
     fetch(`books/${dropdownParent.dataset.contentId}`, {
         method: "PUT",
         body: JSON.stringify({"action": "reading"}), 
@@ -267,8 +272,7 @@ function handleReading() {
             removeButton.textContent = "Remove from Home"
             removeButton.addEventListener("click", handleRemove);
 
-            const hasP = !!readingContainer.getElementsByTagName("p");
-            if (hasP) {
+            if (readingContainer.firstElementChild.tagName == "P") {
                 readingContainer.replaceChildren();
             }
 
@@ -283,6 +287,7 @@ function handleReading() {
                 cloneDropdown.replaceChildren()
                 cloneDropdown.append(finishedButton, removeButton)
                 readingContainer.appendChild(cardClone);
+                finishedContainer.removeChild(finishedContainer.querySelector(`[data-content-id='${cardClone.dataset.contentId}']`))
             } else {
                 readingContainer.appendChild(card);
                 dropdown.replaceChildren();
@@ -290,11 +295,7 @@ function handleReading() {
             }   
             
             // Favorite books won't get removed when moved so we don't have to worry about it now
-            if (cardContainer.children.length == 0) {
-                const emptyContainerText = document.createElement("p");
-                emptyContainerText.innerHTML = "<p>No finished book. You can find books <a href='/books'>here</a></p>"
-                cardContainer.append(emptyContainerText);
-            }
+            addEmptyText()
         }
     })
     .catch(error => console.log(error))
@@ -321,21 +322,15 @@ function handleFinished() {
         removeButton.className = "dropdown-item remove-btn"
         removeButton.textContent = "Remove from Home"
         removeButton.addEventListener("click", handleRemove)
-        
-        const hasP = !!finishedContainer.getElementsByTagName("p");
-        if (hasP) {
+
+        if (finishedContainer.firstElementChild.tagName == "P") {
             finishedContainer.replaceChildren();
         }
         finishedContainer.appendChild(card);
         dropdown.replaceChildren();
         dropdown.append(readingButton, removeButton)
 
-        // Favorite books won't get removed when moved so we don't have to worry about it now
-        if (cardContainer.children.length == 0) {
-            const emptyContainerText = document.createElement("p");
-            emptyContainerText.innerHTML = "No reading book. You can find books <a href='/books'>here</a>"
-            cardContainer.append(emptyContainerText);
-        }
+        addEmptyText()
     })
     .catch(error => console.log(error))
 }
@@ -358,17 +353,7 @@ function handleRemove() {
     .then(response => {
         // Removing the card
         card.remove()
-        if (cardContainer.length == 0) {
-            if (from == "finished") {
-                const emptyContainerText = document.createElement("p");
-                emptyContainerText.innerHTML = "<p>No finished book. You can find books <a href='/books'>here</a></p>"
-                cardContainer.append(emptyContainerText);
-            } else if (from == "reading" ) {
-                const emptyContainerText = document.createElement("p");
-                emptyContainerText.innerHTML = "No reading book. You can find books <a href='/books'>here</a>"
-                cardContainer.append(emptyContainerText);
-            }
-        }
+        addEmptyText()
     })
 }   
 
@@ -381,4 +366,25 @@ function createDropdown(card) {
     const ul = document.createElement("ul");
     ul.className = "mt-3 dropdown-menu dropdown-menu-lg-end user-select-none"
     card.querySelector(".bottom-box").append(icon, ul);
+}
+
+function addEmptyText() {
+    const readingContainer = document.getElementById("reading");
+    const finishedContainer = document.getElementById("finished");
+    const favoriteContainer = document.getElementById("favorites");
+    if (readingContainer.children.length == 0) {
+        const emptyContainerText = document.createElement("p");
+        emptyContainerText.innerHTML = "No reading book. You can find books <a href='/books'>here</a>"
+        readingContainer.append(emptyContainerText);
+    }
+    if (finishedContainer.children.length == 0) {
+        const emptyContainerText = document.createElement("p");
+        emptyContainerText.innerHTML = "No finished book. You can find books <a href='/books'>here</a>"
+        finishedContainer.append(emptyContainerText);
+    }
+    if (favoriteContainer.children.length == 0) {
+        const emptyContainerText = document.createElement("p");
+        emptyContainerText.innerHTML = "No favorite book. You can find books <a href='/books'>here</a>"
+        finishedContainer.append(emptyContainerText);
+    }
 }

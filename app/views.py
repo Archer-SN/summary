@@ -178,6 +178,9 @@ def book_view(request, book_id):
             return HttpResponse(status=201)
         # Add to finished
         elif action == "finished":
+            if request.user.finished_books.filter(pk=book_id).exists():
+                return HttpResponse(status=304)
+
             # The book can only be in one place either reading or finished
             request.user.finished_books.add(book)
             request.user.reading_books.remove(book)
@@ -205,7 +208,7 @@ def article_view(request, article_id):
     if request.method == "PUT":
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse("login"))
-        # If book is already favorited
+        # If article is already favorited
         if request.user.favorite_articles.filter(pk=article_id).exists():
             request.user.favorite_articles.remove(
                 Article.objects.get(pk=article_id))
