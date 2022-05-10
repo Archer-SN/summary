@@ -1,8 +1,13 @@
 {% extends "app/layout.html" %}
+{% load static %}
+
+{% block script %}
+    <script src="{% static 'app/content.js' %}"></script>
+{% endblock %}
 
 {% block body %}
-    <div class="d-flex flex-column">
-        <div class="row row-cols-1 p-5 justify-content-md-center">
+    <div class="bg-light d-flex flex-column container-fluid pb-5">
+        <div class="bg-white row row-cols-1 p-5 justify-content-md-center">
             {% if content.author.id == request.user.id %}
                 {% if content_type == "book" %}
                     <a href="{% url 'edit_book' content.id %}" class="col-1 ms-auto btn btn-primary btn-lg">Edit</a>
@@ -15,21 +20,33 @@
                 <img src="{{ content.thumbnail }}" class="col-3 d-block rounded">
             {% endif %}
         </div>
-        <div id="content-container" class="d-flex justify-content-center flex-wrap gap-5 py-5 bg-light container-fluid">
-            <div class="d-flex flex-column align-items-end justify-content-evenly pe-5">
-                <button id="favorite" class="btn">
-                    <i class="fa-solid fa-lg fa-star fa-2xl pt-3 text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Favorite"></i>
-                </button>
-                <button id="download" class="btn">
-                    <i class="fa-solid fa-download fa-2xl text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Download PDF"></i>
-                </button>
-                <button id="night" class="btn">
-                    <i class="fa-solid fa-moon fa-2xl text-dark" data-bs-toggle="tooltip" data-bs-placement="right" title="Night Mode"></i>
-                </button>
+        <div id="content-container" class="flex-grow-1 d-flex justify-content-center flex-wrap gap-5 py-5 bg-light container-fluid">
+            <div id="tools-container" data-content-type="{{ content_type }}" data-content-id="{{ content.id|default:1 }}" class="flex-shrink-1 gap-5">
+                {% if content_type == "book" %}
+                    <i class="favorite {% if content in request.user.favorite_books.all %}is-favorite{% else %}not-favorite{% endif %} fa-solid fa-star fa-xl pt-1 mt-2"></i>
+                {% else %}
+                    <i class="favorite {% if content in request.user.favorite_articles.all %}is-favorite{% else %}not-favorite{% endif %} fa-solid fa-star fa-xl pt-1 mt-2"></i>
+                {% endif %}
             </div>
-            <div id="content" class="bg-white border border-0 rounded p-5">
+            <div id="content" class="bg-white border border-0 rounded p-5 overflow-auto">
                 {{ content.html_content|safe }}
             </div>
+        </div>
+        <div id="comments-container" class="bg-light d-flex flex-column justify-content-center align-items-center p-5 mb-5 gap-5">
+            <form id="comment-form" class="d-block bg-white rounded comment-form p-5" method="post" data-content-type="{{ content_type }}" data-content-id="{{ content.id }}">
+                {% csrf_token %}
+                <textarea required autofocus autocomplete="off" type="text" id="comment-content" name="content" placeholder="Comment here.." class="form-control mb-3" rows="2"></textarea>
+                <button id="comment-btn" type="button" class="btn btn-primary">Comment</button>             
+            </form>
+            {% for comment in comments %}
+                <div class="d-flex gap-3 comment-box bg-white rounded comment py-3 p-5">
+                    <img src="{{ comment.author.profile_picture }}" alt="" class="profile-picture rounded-circle">
+                    <div>
+                        <a href="{% url 'user' comment.author %}">{{ comment.author }}</a>
+                        <p class="comment-text">{{ comment.content }}</p>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 {% endblock %}

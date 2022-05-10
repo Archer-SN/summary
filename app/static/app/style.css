@@ -10,14 +10,24 @@ i {
     transition: color 1s ease-in-out;
 }
 
+textarea {
+    resize: none;
+}
+
 #content {
     width: 80rem;
+    height: 50rem;
 }
 
 .card {
     z-index: 1;
     width: 300px;
     height: auto;
+    transition: color 1s ease-in-out 1s;
+}
+
+.card:hover {
+    filter: brightness(95%);
 }
 
 .url, .favorite {
@@ -36,3 +46,49 @@ i {
     border: none;
     background: none;
 }
+
+.hover-danger:hover {
+    background-color: #DC3545;
+}
+
+#tools-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    padding-top: 0.5rem;
+    padding-bottom: 3rem;
+}
+
+.comment, .comment-form {
+    width: 40rem;
+}
+
+.profile-picture {
+    width: 50px;
+    height: 50px;
+}
+
+.big-profile-picture {
+    width: 100px;
+    height: 100px
+}
+
+ .comment-text {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+}
+
+@media only screen and (max-width: 1450px) {
+    #tools-container {
+        width: 100%;
+        padding: 1.75rem;
+        flex-direction: row;
+        justify-content: center;
+        position: fixed;
+        bottom: 1px;
+        background-color: aliceblue;
+    }
+  }

@@ -209,8 +209,7 @@ function handleFavorite() {
                     relatedStar.classList.remove("not-favorite")
                     relatedStar.classList.add("is-favorite")
                 }
-                if (favoriteContainer != null && favoriteContainer.contains(relatedCards[0]) == false) {
-                    
+                if (favoriteContainer != null && favoriteContainer.querySelector(`[data-content-id='${parent.dataset.contentId}']`) == null) {
                     if (favoriteContainer.firstElementChild.tagName == "P") {
                         favoriteContainer.replaceChildren();
                     }

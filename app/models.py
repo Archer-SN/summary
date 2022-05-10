@@ -1,17 +1,17 @@
-from unicodedata import category
-from django.dispatch import receiver
+from os import stat
+from telnetlib import STATUS
 from markdown2 import markdown
-from datetime import datetime
 from django import forms
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db.models.signals import post_save
 
 # Create your models here.
 
 
 class User(AbstractUser):
+    profile_picture = models.URLField(
+        default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png")
     favorite_books = models.ManyToManyField(
         "Book", related_name="user_favorited", blank=True)
     favorite_articles = models.ManyToManyField(
@@ -38,7 +38,6 @@ class ContentModel(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     content = models.TextField()
-    thumbnail = models.URLField(default='')
     date_created = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -57,7 +56,11 @@ class Book(ContentModel):
     # book_author is the person who wrote the book
     book_author = models.CharField(max_length=64)
     title = models.CharField(max_length=64)
+    thumbnail = models.URLField(default='')
     category = models.ManyToManyField(Category)
+
+    def all_published():
+        return Article.objects.filter(status=True)
 
     def all_categories():
         return Category.objects.filter(id__in=Book.objects.all().values("category")).exclude(name="All").distinct()
@@ -71,6 +74,7 @@ class Book(ContentModel):
 
 class Article(ContentModel):
     title = models.CharField(max_length=64)
+    thumbnail = models.URLField(default='')
     category = models.ManyToManyField(Category)
 
     def all_categories():
@@ -88,28 +92,30 @@ class BookComment(ContentModel):
 
 
 class ArticleComment(ContentModel):
-    parent = models.ForeignKey(Book, on_delete=models.CASCADE)
+    parent = models.ForeignKey(Article, on_delete=models.CASCADE)
 
 
 class NewArticleForm(forms.ModelForm):
     class Meta:
         model = Article
-        exclude = ["author", "date_created"]
+        fields = ["title", "thumbnail", "category", "content"]
 
     def __init__(self, *args, **kwargs):
         super(NewArticleForm, self).__init__(*args, **kwargs)
         for visible in self.visible_fields():
             visible.field.widget.attrs['class'] = 'form-control'
+            visible.field.widget.attrs['autocomplete'] = 'off'
 
 
 class NewBookForm(forms.ModelForm):
 
     class Meta:
         model = Book
-        exclude = ["author", "date_created"]
+        fields = ["title", "book_author", "thumbnail", "category", "content"]
 
     def __init__(self, *args, **kwargs):
         super(NewBookForm, self).__init__(*args, **kwargs)
 
         for visible in self.visible_fields():
             visible.field.widget.attrs['class'] = 'form-control'
+            visible.field.widget.attrs['autocomplete'] = 'off'

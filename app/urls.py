@@ -26,5 +26,7 @@ urlpatterns = [
     path("edit/article<int:article_id>",
          views.edit_article, name="edit_article"),
 
+    path("comment", views.comment, name="comment"),
+
     path("error", views.error_view, name="error")
 ]

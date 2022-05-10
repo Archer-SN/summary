@@ -1,18 +1,16 @@
 import json
-from unicodedata import category
-from django import forms
 from django.db import IntegrityError
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
-from jinja2 import Undefined
 
-from .models import User, Category, Book, Article, BookComment, NewArticleForm, NewBookForm
+from .models import User, Category, Book, Article, BookComment, ArticleComment, NewArticleForm, NewBookForm
 # Create your views here.
 
 
+@login_required
 def index(request):
 
     return render(request, "app/index.html", {
@@ -36,7 +34,7 @@ def login_view(request):
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:
-            return render(request, "network/login.html", {
+            return render(request, "app/login.html", {
                 "message": "Invalid username and/or password."
             })
     else:
@@ -45,7 +43,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return HttpResponseRedirect(reverse("index"))
+    return HttpResponseRedirect(reverse("login"))
 
 
 def register_view(request):
@@ -66,7 +64,7 @@ def register_view(request):
             user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
-            return render(request, "network/register.html", {
+            return render(request, "app/register.html", {
                 "message": "Username already taken."
             })
         login(request, user)
@@ -144,12 +142,18 @@ def article_list(request):
 
 
 def user_view(request, username):
+    if not User.objects.filter(username=username).exists():
+        return HttpResponseRedirect(reverse("error"))
+    user = User.objects.get(username=username)
     return render(request, "app/profile.html", {
-
+        "user": user,
+        "summarized_books": Book.objects.filter(author=user),
+        "written_articles": Article.objects.filter(author=user)
     })
 
 
 def book_view(request, book_id):
+    # Handling favorites
     if request.method == "PUT":
         data = json.loads(request.body)
         action = data["action"]
@@ -200,11 +204,13 @@ def book_view(request, book_id):
 
         return render(request, "app/content.html", {
             "content_type": "book",
-            "content": Book.objects.get(pk=book_id)
+            "content": Book.objects.get(pk=book_id),
+            "comments": BookComment.objects.filter(parent__id=book_id).order_by("-date_created"),
         })
 
 
 def article_view(request, article_id):
+
     if request.method == "PUT":
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse("login"))
@@ -224,7 +230,8 @@ def article_view(request, article_id):
 
         return render(request, "app/content.html", {
             "content_type": "article",
-            "content": Article.objects.get(pk=article_id)
+            "content": Article.objects.get(pk=article_id),
+            "comments": ArticleComment.objects.filter(parent__id=article_id).order_by("-date_created"),
         })
 
 
@@ -340,6 +347,36 @@ def edit_article(request, article_id):
         else:
             return HttpResponseRedirect(reverse("error"))
 
+    else:
+        return HttpResponse(status=405)
+
+
+def comment(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        content_type = data["content_type"]
+        content = data["content"]
+        content_id = data["content_id"]
+
+        if len(content) <= 0:
+            return HttpResponse(status=400)
+
+        if content_type == "book":
+            if not Book.objects.filter(pk=content_id).exists():
+                return HttpResponse(status=404)
+            BookComment.objects.create(
+                author=request.user, content=content, parent=Book.objects.get(pk=content_id))
+            return HttpResponse(status=201)
+        elif content_type == "article":
+            if not Article.objects.filter(pk=content_id).exists():
+                return HttpResponse(status=404)
+            ArticleComment.objects.create(
+                author=request.user, content=content, parent=Article.objects.get(pk=content_id))
+            return HttpResponse(status=201)
+        else:
+            return HttpResponse(status=400)
+    elif request.method == "PUT":
+        pass
     else:
         return HttpResponse(status=405)
 

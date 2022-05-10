@@ -1,7 +1,35 @@
 {% extends 'app/layout.html' %}
+{% load static %}
+
+
+{% block script %}
+    <script src="{% static 'app/content.js' %}"></script>
+{% endblock %}
 
 {% block body %}
-
-    <img src="">
-
+    <div class="d-flex flex-column justify-content-center align-items-center p-4 gap-4">
+        <div>
+            <img src="{{ user.profile_picture }}" alt="" class="big-profile-picture rounded-circle ms-4 mb-3">
+            <h3 class="text-center">{{ user.username }}</h3>
+            <p>Summarized Books: {{ summarized_books.count }}</p>
+            <p>Written Articles: {{ written_articles.count }}</p>
+        </div>
+        <h2>Summarized Books</h2>
+        <div data-content-type="book" class="d-flex flex-wrap justify-content-center gap-4 pb-5 px-5">
+            {% for content in summarized_books %}
+                {% include "app/card.html" with display="d-flex" content_type="book" %}
+            {% empty %}
+                <h2>No book summarized</h2>
+            {% endfor %}
+        </div>
+        <h2>Written Articles</h1>
+        <div data-content-type="article" class="d-flex flex-wrap justify-content-center gap-4 pb-5 px-5">
+            {% for content in written_articles %}
+                {% include "app/card.html" with display="d-flex" content_type="article" %}
+            {% empty %}
+                <h2>No article written.</h2>
+            {% endfor %}
+        </div>
+    </div>
+    
 {% endblock %}
