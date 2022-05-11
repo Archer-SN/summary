@@ -404,5 +404,6 @@ def change_profile_picture(request):
     # We'll just reset the form if the url is right
     form = ProfilePictureForm()
     return render(request, "app/form.html", {
-        "form": form
+        "value": "Change",
+        "form": form,
     })

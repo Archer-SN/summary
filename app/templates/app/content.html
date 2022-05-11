@@ -20,6 +20,11 @@
                 <img src="{{ content.thumbnail }}" class="col-3 d-block rounded">
             {% endif %}
         </div>
+        {% if content_type == "book" %}
+            <a href="{% url 'books' %}" class="back pt-5 h5">&lt Back to Books</a>
+        {% else %}
+            <a href="{% url 'articles' %}" class="back pt-5 h5">&lt Back to Articles</a>
+        {% endif %}
         <div id="content-container" class="flex-grow-1 d-flex justify-content-center flex-wrap gap-5 py-5 bg-light container-fluid">
             <div id="tools-container" data-content-type="{{ content_type }}" data-content-id="{{ content.id|default:1 }}" class="flex-shrink-1 gap-5">
                 {% if content_type == "book" %}
@@ -35,7 +40,7 @@
         <div id="comments-container" class="bg-light d-flex flex-column justify-content-center align-items-center p-5 mb-5 gap-5">
             <form id="comment-form" class="d-block bg-white rounded comment-form p-5" method="post" data-content-type="{{ content_type }}" data-content-id="{{ content.id }}">
                 {% csrf_token %}
-                <textarea required autofocus autocomplete="off" type="text" id="comment-content" name="content" placeholder="Comment here.." class="form-control mb-3" rows="2"></textarea>
+                <textarea required autocomplete="off" type="text" id="comment-content" name="content" placeholder="Comment here.." class="form-control mb-3" rows="2"></textarea>
                 <button id="comment-btn" type="button" class="btn btn-primary">Comment</button>             
             </form>
             {% for comment in comments %}

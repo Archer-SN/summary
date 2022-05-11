@@ -8,9 +8,9 @@
         <h2 class="title fs-4 mb-2 text-dark">{{ content.title }}</h2>
         {% if content_type == "book" %}
             <a class="book-author fs-5 fw-bold" href="https://www.google.com/search?q={{content.book_author|default:''}}">By {{ content.book_author }}</a>
-            <h3 class="author fs-5 text-dark">Summarized by <a href="{% url 'user' content.author|default:'test' %}">{{ content.author }}</a></h3>
+            <h3 class="author-prefix fs-5 text-dark">Summarized by <a href="{% url 'user' content.author|default:'test' %}" class="author">{{ content.author }}</a></h3>
         {% else %}
-            <h3 class="author fs-5 text-dark">Created by <a href="{% url 'user' content.author|default:'test' %}">{{ content.author }}</a></h3>
+            <h3 class="author-prefix fs-5 text-dark">Created by <a href="{% url 'user' content.author|default:'test' %}" class="author">{{ content.author }}</a></h3>
         {% endif %}
     </div>
     <div data-content-type="{{content_type}}" data-content-id="{{ content.id|default:1 }}" class="bottom-box flex-shrink-1 pt-3 d-flex justify-content-evenly border border-1">

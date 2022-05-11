@@ -51,6 +51,11 @@ textarea {
     background-color: #DC3545;
 }
 
+.back {
+    position: relative;
+    left: 18vw;
+}
+
 #tools-container {
     display: flex;
     flex-direction: column;

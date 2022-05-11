@@ -19,12 +19,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const favoriteButtons = document.getElementsByClassName("favorite");
     
     const commentButton = document.getElementById("comment-btn");
+    const urlDivs = document.getElementsByClassName("url");
 
     if (!!commentButton) {
         commentButton.addEventListener("click", submitComment )
     }
     for (let i = 0; i < favoriteButtons.length; i++) {
         favoriteButtons[i].addEventListener("click", handleFavorite)
+    }
+
+    for (let i = 0; i < urlDivs.length; i++) {
+        urlDivs[i].addEventListener("click", redirect)
     }
 })
 
@@ -63,4 +68,8 @@ function submitComment() {
         }
     })
     .catch(error => console.log(error))
+}
+
+function redirect() {
+    location.href=`/${this.parentNode.dataset.contentType}s/${this.parentNode.dataset.contentId}`;
 }

@@ -127,13 +127,17 @@ function createCard(contentType, content) {
         bookAuthor.textContent = `By ${content.book_author}`;
         bookAuthor.setAttribute("href", `user/${content.book_author}`)
     }
-    const author = contentContainer.querySelector(".author");
+    const authorPrefix = contentContainer.querySelector(".author-prefix");
     if (contentType === "book") {
-        author.textContent = `Summarized by ${content.author}`;
+        authorPrefix.textContent = "Summarized by ";
     }
     else {
-        author.textContent = `Created by ${content.author}`;
+        authorPrefix.textContent = "Created by ";
     }
+    const author = document.createElement("a");
+    author.setAttribute("href", `/user/${content.author}`);
+    author.textContent = content.author
+    authorPrefix.append(author);
     const dateCreated = contentContainer.querySelector(".date-created");
     dateCreated.textContent = `Created ${content.date_created}`;
 
@@ -227,6 +231,7 @@ function handleFavorite() {
                     readingButton.className = "dropdown-item reading-btn"
                     readingButton.textContent = "Move to Currently Reading"
                     readingButton.addEventListener("click", handleReading);
+                    cardClone.querySelector("ul").replaceChildren()
                     cardClone.querySelector("ul").append(readingButton);
                     favoriteContainer.append(cardClone);
                 }
