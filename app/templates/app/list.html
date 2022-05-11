@@ -28,7 +28,7 @@
     </div>
     <div id="list-container" data-content-type="{{ content_type }}" class="d-flex flex-wrap justify-content-center gap-4 pb-5 px-5">
         {% for content in content_list %}
-            {% include "app/card.html" with display="d-flex" %}
+            {% include "app/card.html" with display="d-flex" container="favorites" %}
         {% empty %}
             <h2>No {{ content_type }} for now..</h2>
         {% endfor %}

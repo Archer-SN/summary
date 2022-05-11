@@ -1,4 +1,5 @@
 import json
+from django import forms
 from django.db import IntegrityError
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
@@ -7,10 +8,17 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 
 from .models import User, Category, Book, Article, BookComment, ArticleComment, NewArticleForm, NewBookForm
+
+
+class ProfilePictureForm(forms.Form):
+    profile_url = forms.URLField(label="Image URL",
+                                 widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+
 # Create your views here.
 
 
-@login_required
+@ login_required
 def index(request):
 
     return render(request, "app/index.html", {
@@ -235,7 +243,7 @@ def article_view(request, article_id):
         })
 
 
-@login_required
+@ login_required
 def create_book(request):
     if request.method == "POST":
         # The author field is not provided in the form
@@ -255,7 +263,7 @@ def create_book(request):
     })
 
 
-@login_required
+@ login_required
 def create_article(request):
     if request.method == "POST":
         # The author field is not provided in the form
@@ -275,7 +283,7 @@ def create_article(request):
     })
 
 
-@login_required
+@ login_required
 def edit_book(request, book_id):
     # Edit the book
     if request.method == "POST":
@@ -313,7 +321,7 @@ def edit_book(request, book_id):
         return HttpResponse(status=405)
 
 
-@login_required
+@ login_required
 def edit_article(request, article_id):
     # Edit the article
     if request.method == "POST":
@@ -383,3 +391,18 @@ def comment(request):
 
 def error_view(request):
     return render(request, "app/error.html")
+
+
+@ login_required
+def change_profile_picture(request):
+    if request.method == "POST":
+        form = ProfilePictureForm(request.POST)
+        if form.is_valid():
+            request.user.profile_picture = form.cleaned_data["profile_url"]
+            request.user.save()
+            return HttpResponseRedirect(reverse("user", args=[request.user.username]))
+    # We'll just reset the form if the url is right
+    form = ProfilePictureForm()
+    return render(request, "app/form.html", {
+        "form": form
+    })

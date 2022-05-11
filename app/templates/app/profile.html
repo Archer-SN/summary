@@ -8,6 +8,9 @@
 
 {% block body %}
     <div class="d-flex flex-column justify-content-center align-items-center p-4 gap-4">
+        {% if request.user.id == user.id %}
+            <a href="{% url 'profile_picture' %}" class="btn btn-primary align-self-end">Change Profile Picture</a>
+        {% endif %}
         <div>
             <img src="{{ user.profile_picture }}" alt="" class="big-profile-picture rounded-circle ms-4 mb-3">
             <h3 class="text-center">{{ user.username }}</h3>

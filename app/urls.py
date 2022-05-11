@@ -14,6 +14,9 @@ urlpatterns = [
     path("articles", views.article_list, name="articles"),
     # User's profile view
     path("user/<str:username>", views.user_view, name="user"),
+    # Handles changing profile picture
+    path("picture", views.change_profile_picture, name="profile_picture"),
+
     # Views articles and books the user have created
     path("books/<int:book_id>", views.book_view, name="book"),
     path("articles/<int:article_id>",
